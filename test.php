@@ -67,22 +67,41 @@ function unsigned_and32($a, $b)
 
 	return (($a1 & $b1) | ($a2 & $b2)) + $c;
 }
-function unsigned_rshift32($a, $b)//BROKEN AS HELL
+function unsigned_rshift32($a, $b)
 {
-	if ($a > 0x7FFFFFFF)
-		return bindec(decbin(decbin($a) >> $b - 1));
-	return lshiftright($a, $b);
+	// < 0 error?
+	if ($b === 0)
+		return $a;
+	if ($b >= 32)
+		return 0;
+	// <= 0x7FFFFFFF?
 
-//	echo decbin($a)."\n";
-//	echo lshiftright($a, $b)."\n";
-//	echo decbin(decbin($a) >> $b)."\n\n";
-//	return bindec(decbin(decbin($a) >> $b));
+	$a1 = ($a & 0x7FFFFFFF) >> $b;
+	$c = ($a & 0x80000000) ? (0x40000000 >> ($b - 1)) : 0;
+	return $a1 + $c;
 }
 function unsigned_lshift32($a, $b)
 {
-	return bindec(decbin(decbin($a) << $b));
+	$a1 = $a << $b;
+//	$c = ($a & (0x40000000 >> ($b - 1))) ? 0x80000000 : 0;
+//	return $a1 + ($c * 2);//Why?
+	return bindec(decbin($a1));//Better way than bindec(decbin, is it needed at all?
 }
 
+
+
+
+echo unsigned_lshift32(0x6D472CEA, 1)." = 3666762196<br>";//1	0xDA8E59D4 3666762196
+echo unsigned_lshift32(0x6D472CEA, 2)." = 3038557096<br>";//2	0xB51Cb3A8 3038557096
+echo unsigned_lshift32(0x6D472CEA, 3)." = 1782146896<br>";//3	0x6A396750 1782146896
+echo unsigned_lshift32(0x6D472CEA, 4)." = 3564293792<br>";//4	0xD472CEA0 3564293792
+echo unsigned_lshift32(0x6D472CEA, 5)." = 2833620288<br>";//5	0xA8E59D40 2833620288
+
+
+
+die();
+
+echo unsigned_rshift32(0x80000000, 1);
 
 
 
@@ -92,8 +111,8 @@ for ($i = 0; $i < 1000; $i++)
 	$num1 = bindec(decbin(unpack('L', openssl_random_pseudo_bytes(4))[1]));
 	$num2 = bindec(decbin(unpack('L', openssl_random_pseudo_bytes(4))[1]));
 
-	$val1 = unsigned_and32($num1, $num2);
-	$val2 = sprintf('%u', $num1 & $num2);;
+	$val1 = unsigned_lshift32($num1, 1);
+	$val2 = sprintf('%u', $num1 << 1);
 
 	if ($val1 != $val2)
 	{
