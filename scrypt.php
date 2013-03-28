@@ -1,4 +1,10 @@
 <?php
+//CHECK ENDIAN
+//CHECK MAX INT SIZE
+
+
+
+
 
 /*
 
@@ -332,8 +338,6 @@ echo (sprintf('%u', $xxx))." = 4097626379\n".(sprintf('%u', $yyy))." = 345233091
 
 
 ?>
-
-
 INPUT:
 7e879a21 4f3ec986 7ca940e6 41718f26
 baee555b 8c61c1b5 0df84611 6dcd3b1d
@@ -347,7 +351,4 @@ b4393168 e3c9e6bc fe6bc5b7 a06d96ba
 e424cc10 2c91745c 24ad673d c7618f81
 <?php
 echo "</pre>";
-
-
-
 ?>
