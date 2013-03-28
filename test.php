@@ -335,7 +335,76 @@ function scryptBlockMix(&$out = array(), $in = array(), $r)//in array of arrays 
 //	      Y[1], Y[3], ..., Y[2 * r - 1])
 }
 
-$B = array(
+
+
+
+function scryptROMix()
+{
+
+
+
+/*
+   Algorithm scryptROMix
+
+   Input:
+            r       Block size parameter.
+            B       Input octet vector of length 128 * r octets.
+            N       CPU/Memory cost parameter, must be larger than 1,
+                    a power of 2 and less than 2^(128 * r / 8).
+
+   Output:
+            B'      Output octet vector of length 128 * r octets.
+
+   Steps:
+
+     1. X = B
+
+     2. for i = 0 to N - 1 do
+          V[i] = X
+          X = scryptBlockMix (X)
+        end for
+
+     3. for i = 0 to N - 1 do
+          j = Integerify (X) mod N
+                 where Integerify (B[0] ... B[2 * r - 1]) is defined
+                 as the result of interpreting B[2 * r - 1] as a
+                 little-endian integer.
+          T = X xor V[j]
+          X = scryptBlockMix (T)
+        end for
+
+     4. B' = X
+*/
+
+}
+
+
+
+
+
+
+// salsa208_word_specification Test ////////////////////////////////////////////
+$salsa208_word_specification_test_input = array(
+	0x7E879A21, 0x4F3EC986, 0x7CA940E6, 0x41718F26,
+	0xBAEE555B, 0x8C61C1B5, 0x0DF84611, 0x6DCD3B1D,
+	0xEE24F319, 0xDF9B3D85, 0x14121E4B, 0x5AC5AA32,
+	0x76021D29, 0x09C74829, 0xEDEBC68D, 0xB8B8C25E
+);
+$salsa208_word_specification_test_asserted_output = array(
+	0xA41F859C, 0x6608CC99, 0x3B81CACB, 0x020CEF05,
+	0x044B2181, 0xA2FD337D, 0xFD7B1C63, 0x96682F29,
+	0xB4393168, 0xE3C9E6BC, 0xFE6BC5B7, 0xA06D96BA,
+	0xE424CC10, 0x2C91745C, 0x24AD673D, 0xC7618F81
+);
+
+$salsa208_word_specification_test_output = array();
+salsa208_word_specification($salsa208_word_specification_test_output, $salsa208_word_specification_test_input);
+if (!assert($salsa208_word_specification_test_output === $salsa208_word_specification_test_asserted_output, "salsa208_word_specification() test")) die();//Find a better way to test this.
+////////////////////////////////////////////////////////////////////////////////
+
+// scryptBlockMix Test /////////////////////////////////////////////////////////
+$scryptBlockMix_test_rounds = 1;
+$scryptBlockMix_test_input = array(
 	array(0xF7CE0B65, 0x3D2D72A4, 0x108CF5AB, 0xE912FFDD,
 	      0x777616DB, 0xBB27A70E, 0x8204F3AE, 0x2D0F6FAD,
 	      0x89F68F48, 0x11D1E87B, 0xCC3BD740, 0x0A9FFD29,
@@ -345,37 +414,90 @@ $B = array(
 	      0x67D27C51, 0xCE4AD5FE, 0xD829C90B, 0x505A571B,
 	      0x7F4D1CAD, 0x6A523CDA, 0x770E67BC, 0xEAAF7E89)
 );
+$scryptBlockMix_test_asserted_output = array(
+	array(0xA41F859C, 0x6608CC99, 0x3B81CACB, 0x020CEF05,
+	      0x044B2181, 0xA2FD337D, 0xFD7B1C63, 0x96682F29,
+	      0xB4393168, 0xE3C9E6BC, 0xFE6BC5B7, 0xA06D96BA,
+	      0xE424CC10, 0x2C91745C, 0x24AD673D, 0xC7618F81),
+	array(0x20EDC975, 0x323881A8, 0x0540F64C, 0x162DCD3C,
+	      0x21077CFE, 0x5F8D5FE2, 0xB1A4168F, 0x953678B7,
+	      0x7D3B3D80, 0x3B60E4AB, 0x920996E5, 0x9B4D53B6,
+	      0x5D2A2258, 0x77D5EDF5, 0x842CB9F1, 0x4EEFE425)
+);
 
-$OUT = array();
+$scryptBlockMix_test_output = array();
+scryptBlockMix($scryptBlockMix_test_output, $scryptBlockMix_test_input, $scryptBlockMix_test_rounds);
+if (!assert($scryptBlockMix_test_output === $scryptBlockMix_test_asserted_output, "scryptBlockMix() test")) die();//Find a better way to test this.
+////////////////////////////////////////////////////////////////////////////////
 
-scryptBlockMix($OUT, $B, 1);
+// scryptROMix Test /////////////////////////////////////////////////////////
+$scryptROMix_test_block_size = 1;
+$scryptROMix_test_cost = 16;
+$scryptROMix_test_input = array(
+	0xF7CE0B65, 0x3D2D72A4, 0x108CF5AB, 0xE912FFDD,
+	0x777616DB, 0xBB27A70E, 0x8204F3AE, 0x2D0F6FAD,
+	0x89F68F48, 0x11D1E87B, 0xCC3BD740, 0x0A9FFD29,
+	0x094F0184, 0x639574F3, 0x9AE5A131, 0x5217BCD7,
+	0x89499144, 0x7213BB22, 0x6C25B54D, 0xA86370FB,
+	0xCD984380, 0x374666BB, 0x8FFCB5BF, 0x40C254B0,
+	0x67D27C51, 0xCE4AD5FE, 0xD829C90B, 0x505A571B,
+	0x7F4D1CAD, 0x6A523CDA, 0x770E67BC, 0xEAAF7E89
+);
+$scryptROMix_test_asserted_output = array(
+	0x79CCC193, 0x629DEBCA, 0x047F0B70, 0x604BF6B6,
+	0x2CE3DD4A, 0x9626E355, 0xFAFC6198, 0xE6EA2B46,
+	0xD5841367, 0x3B99B029, 0xD665C357, 0x601FB426,
+	0xA0B2F4BB, 0xA200EE9F, 0x0A43D19B, 0x571A9C71,
+	0xEF1142E6, 0x5D5A266F, 0xDDCA832C, 0xE59FAA7C,
+	0xAC0B9CF1, 0xBE2BFFCA, 0x300D01EE, 0x387619C4,
+	0xAE12FD44, 0x38F203A0, 0xE4E1C47E, 0xC314861F,
+	0x4E9087CB, 0x33396A68, 0x73E8F9D2, 0x539A4B8E
+);
+
+$scryptROMix_test_output = array();
+scryptROMix();
+if (!assert($scryptROMix_test_output === $scryptROMix_test_asserted_output, "scryptROMix() test")) die();//Find a better way to test this.
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 echo "<pre>";
-print_r($OUT);
+print_r($scryptBlockMix_test_output);
 ?>
 
+INPUT:
+B = f7ce0b65 3d2d72a4 108cf5ab e912ffdd
+	777616db bb27a70e 8204f3ae 2d0f6fad
+	89f68f48 11d1e87b cc3bd740 0a9ffd29
+	094f0184 639574f3 9ae5a131 5217bcd7
+	89499144 7213bb22 6c25b54d a86370fb
+	cd984380 374666bb 8ffcb5bf 40c254b0
+	67d27c51 ce4ad5fe d829c90b 505a571b
+	7f4d1cad 6a523cda 770e67bc eaaf7e89
 
-INPUT
-B[0] =  f7ce0b65 3d2d72a4 108cf5ab e912ffdd
-		777616db bb27a70e 8204f3ae 2d0f6fad
-		89f68f48 11d1e87b cc3bd740 0a9ffd29
-		094f0184 639574f3 9ae5a131 5217bcd7
-
-B[1] =  89499144 7213bb22 6c25b54d a86370fb
-		cd984380 374666bb 8ffcb5bf 40c254b0
-		67d27c51 ce4ad5fe d829c90b 505a571b
-		7f4d1cad 6a523cda 770e67bc eaaf7e89
-
-OUTPUT
-B'[0] = a41f859c 6608cc99 3b81cacb 020cef05
-		044b2181 a2fd337d fd7b1c63 96682f29
-		b4393168 e3c9e6bc fe6bc5b7 a06d96ba
-		e424cc10 2c91745c 24ad673d c7618f81
-
-B'[1] = 20edc975 323881a8 0540f64c 162dcd3c
-		21077cfe 5f8d5fe2 b1a4168f 953678b7
-		7d3b3d80 3b60e4ab 920996e5 9b4d53b6
-		5d2a2258 77d5edf5 842cb9f1 4eefe425
+OUTPUT:
+B = 79ccc193 629debca 047f0b70 604bf6b6
+	2ce3dd4a 9626e355 fafc6198 e6ea2b46
+	d5841367 3b99b029 d665c357 601fb426
+	a0b2f4bb a200ee9f 0a43d19b 571a9c71
+	ef1142e6 5d5a266f ddca832c e59faa7c
+	ac0b9cf1 be2bffca 300d01ee 387619c4
+	ae12fd44 38f203a0 e4e1c47e c314861f
+	4e9087cb 33396a68 73e8f9d2 539a4b8e
 <?php
 echo "</pre>";
 ?>
