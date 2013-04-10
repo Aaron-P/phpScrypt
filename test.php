@@ -1,4 +1,6 @@
 <?php
+//REFACTOR CODE
+
 
 function dbg($in)
 {
@@ -32,6 +34,22 @@ function dbg($in)
 //0001011101001101 1010011000011001 = (a1 ^ b1) | (a2 ^ b2) + c //incorrect wtf
 
 //do we need to break it up into 16 bits? Can we do 31 + 1 bit?
+
+
+
+function unsigned_mod32($a, $b)//?????????
+{
+	$a1 = $a & 0x7FFF0000;
+	$a2 = $a & 0x0000FFFF;
+	$a3 = $a & 0x80000000;
+	$b1 = $b & 0x7FFF0000;
+	$b2 = $b & 0x0000FFFF;
+	$b3 = $b & 0x80000000;
+
+	$c = ($a3 || $b3) ? 0x80000000 : 0;
+
+	return (($a1 | $b1) | ($a2 | $b2)) + $c;
+}
 
 function unsigned_or32($a, $b)//NOT NEEDED? | returns signed in php
 {
@@ -141,27 +159,8 @@ for ($i = 0; $i < 1000; $i++)
 echo "Tests finished succesfully.";
 */
 
-function R($a, $b)
-{
-//	return unsigned_or32($a << $b, unsigned_rshift32($a, 32 - $b));
-	return unsigned_or32(unsigned_lshift32($a, $b), unsigned_rshift32($a, 32 - $b));
-}
 
-function salsa208_word_specification(&$out = array(), $in = array())//out and in should be 1 parameter
-{
-	if (count($in) !== 16)//Should $out be length checked?
-		return false;//throw here instead
-	$out = array();//should we really do this?//NO WE SHOULDNT DO THIS
 
-	for ($i = 0; $i < 16; ++$i)
-		$in[$i] = unsigned_byteswap32($in[$i]);
-
-	$x = array();
-	for ($i = 0; $i < 16; ++$i)
-		$x[$i] = $in[$i];
-
-	for ($i = 8; $i > 0; $i -= 2)
-	{
 /*		$x[ 4] ^= R($x[ 0] + $x[12],  7); $x[ 8] ^= R($x[ 4] + $x[ 0],  9);
 		$x[12] ^= R($x[ 8] + $x[ 4], 13); $x[ 0] ^= R($x[12] + $x[ 8], 18);
 		$x[ 9] ^= R($x[ 5] + $x[ 1],  7); $x[13] ^= R($x[ 9] + $x[ 5],  9);
@@ -178,29 +177,6 @@ function salsa208_word_specification(&$out = array(), $in = array())//out and in
 		$x[ 9] ^= R($x[ 8] + $x[11], 13); $x[10] ^= R($x[ 9] + $x[ 8], 18);
 		$x[12] ^= R($x[15] + $x[14],  7); $x[13] ^= R($x[12] + $x[15],  9);
 		$x[14] ^= R($x[13] + $x[12], 13); $x[15] ^= R($x[14] + $x[13], 18);*/
-		$x[ 4] = unsigned_xor32($x[ 4], R($x[ 0] + $x[12],  7)); $x[ 8] = unsigned_xor32($x[ 8], R($x[ 4] + $x[ 0],  9));
-		$x[12] = unsigned_xor32($x[12], R($x[ 8] + $x[ 4], 13)); $x[ 0] = unsigned_xor32($x[ 0], R($x[12] + $x[ 8], 18));
-		$x[ 9] = unsigned_xor32($x[ 9], R($x[ 5] + $x[ 1],  7)); $x[13] = unsigned_xor32($x[13], R($x[ 9] + $x[ 5],  9));
-		$x[ 1] = unsigned_xor32($x[ 1], R($x[13] + $x[ 9], 13)); $x[ 5] = unsigned_xor32($x[ 5], R($x[ 1] + $x[13], 18));
-		$x[14] = unsigned_xor32($x[14], R($x[10] + $x[ 6],  7)); $x[ 2] = unsigned_xor32($x[ 2], R($x[14] + $x[10],  9));
-		$x[ 6] = unsigned_xor32($x[ 6], R($x[ 2] + $x[14], 13)); $x[10] = unsigned_xor32($x[10], R($x[ 6] + $x[ 2], 18));
-		$x[ 3] = unsigned_xor32($x[ 3], R($x[15] + $x[11],  7)); $x[ 7] = unsigned_xor32($x[ 7], R($x[ 3] + $x[15],  9));
-		$x[11] = unsigned_xor32($x[11], R($x[ 7] + $x[ 3], 13)); $x[15] = unsigned_xor32($x[15], R($x[11] + $x[ 7], 18));
-		$x[ 1] = unsigned_xor32($x[ 1], R($x[ 0] + $x[ 3],  7)); $x[ 2] = unsigned_xor32($x[ 2], R($x[ 1] + $x[ 0],  9));
-		$x[ 3] = unsigned_xor32($x[ 3], R($x[ 2] + $x[ 1], 13)); $x[ 0] = unsigned_xor32($x[ 0], R($x[ 3] + $x[ 2], 18));
-		$x[ 6] = unsigned_xor32($x[ 6], R($x[ 5] + $x[ 4],  7)); $x[ 7] = unsigned_xor32($x[ 7], R($x[ 6] + $x[ 5],  9));
-		$x[ 4] = unsigned_xor32($x[ 4], R($x[ 7] + $x[ 6], 13)); $x[ 5] = unsigned_xor32($x[ 5], R($x[ 4] + $x[ 7], 18));
-		$x[11] = unsigned_xor32($x[11], R($x[10] + $x[ 9],  7)); $x[ 8] = unsigned_xor32($x[ 8], R($x[11] + $x[10],  9));
-		$x[ 9] = unsigned_xor32($x[ 9], R($x[ 8] + $x[11], 13)); $x[10] = unsigned_xor32($x[10], R($x[ 9] + $x[ 8], 18));
-		$x[12] = unsigned_xor32($x[12], R($x[15] + $x[14],  7)); $x[13] = unsigned_xor32($x[13], R($x[12] + $x[15],  9));
-		$x[14] = unsigned_xor32($x[14], R($x[13] + $x[12], 13)); $x[15] = unsigned_xor32($x[15], R($x[14] + $x[13], 18));
-	}
-	for ($i = 0; $i < 16; ++$i)
-		$out[$i] = $x[$i] + $in[$i];
-
-	for ($i = 0; $i < 16; ++$i)
-		$out[$i] = unsigned_byteswap32($out[$i]);
-}
 
 /*
 $in[0]  = 0x7E879A21;
@@ -270,6 +246,74 @@ echo "</pre>";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function R($a, $b)
+{
+//	return unsigned_or32($a << $b, unsigned_rshift32($a, 32 - $b));
+	return unsigned_or32(unsigned_lshift32($a, $b), unsigned_rshift32($a, 32 - $b));
+}
+
+//function salsa208_word_specification(&$out = array(), $in = array())//out and in should be 1 parameter
+function salsa208_word_specification($in)//out and in should be 1 parameter
+{
+	if (!is_array($in))
+		return false;
+	if (count($in) !== 16)//Should $out be length checked?
+		return false;//throw here instead
+	$out = array();//should we really do this?//NO WE SHOULDNT DO THIS
+
+	for ($i = 0; $i < 16; ++$i)
+		$in[$i] = unsigned_byteswap32($in[$i]);
+
+	$x = array();
+	for ($i = 0; $i < 16; ++$i)
+		$x[$i] = $in[$i];
+
+	for ($i = 8; $i > 0; $i -= 2)
+	{
+		$x[ 4] = unsigned_xor32($x[ 4], R($x[ 0] + $x[12],  7)); $x[ 8] = unsigned_xor32($x[ 8], R($x[ 4] + $x[ 0],  9));
+		$x[12] = unsigned_xor32($x[12], R($x[ 8] + $x[ 4], 13)); $x[ 0] = unsigned_xor32($x[ 0], R($x[12] + $x[ 8], 18));
+		$x[ 9] = unsigned_xor32($x[ 9], R($x[ 5] + $x[ 1],  7)); $x[13] = unsigned_xor32($x[13], R($x[ 9] + $x[ 5],  9));
+		$x[ 1] = unsigned_xor32($x[ 1], R($x[13] + $x[ 9], 13)); $x[ 5] = unsigned_xor32($x[ 5], R($x[ 1] + $x[13], 18));
+		$x[14] = unsigned_xor32($x[14], R($x[10] + $x[ 6],  7)); $x[ 2] = unsigned_xor32($x[ 2], R($x[14] + $x[10],  9));
+		$x[ 6] = unsigned_xor32($x[ 6], R($x[ 2] + $x[14], 13)); $x[10] = unsigned_xor32($x[10], R($x[ 6] + $x[ 2], 18));
+		$x[ 3] = unsigned_xor32($x[ 3], R($x[15] + $x[11],  7)); $x[ 7] = unsigned_xor32($x[ 7], R($x[ 3] + $x[15],  9));
+		$x[11] = unsigned_xor32($x[11], R($x[ 7] + $x[ 3], 13)); $x[15] = unsigned_xor32($x[15], R($x[11] + $x[ 7], 18));
+		$x[ 1] = unsigned_xor32($x[ 1], R($x[ 0] + $x[ 3],  7)); $x[ 2] = unsigned_xor32($x[ 2], R($x[ 1] + $x[ 0],  9));
+		$x[ 3] = unsigned_xor32($x[ 3], R($x[ 2] + $x[ 1], 13)); $x[ 0] = unsigned_xor32($x[ 0], R($x[ 3] + $x[ 2], 18));
+		$x[ 6] = unsigned_xor32($x[ 6], R($x[ 5] + $x[ 4],  7)); $x[ 7] = unsigned_xor32($x[ 7], R($x[ 6] + $x[ 5],  9));
+		$x[ 4] = unsigned_xor32($x[ 4], R($x[ 7] + $x[ 6], 13)); $x[ 5] = unsigned_xor32($x[ 5], R($x[ 4] + $x[ 7], 18));
+		$x[11] = unsigned_xor32($x[11], R($x[10] + $x[ 9],  7)); $x[ 8] = unsigned_xor32($x[ 8], R($x[11] + $x[10],  9));
+		$x[ 9] = unsigned_xor32($x[ 9], R($x[ 8] + $x[11], 13)); $x[10] = unsigned_xor32($x[10], R($x[ 9] + $x[ 8], 18));
+		$x[12] = unsigned_xor32($x[12], R($x[15] + $x[14],  7)); $x[13] = unsigned_xor32($x[13], R($x[12] + $x[15],  9));
+		$x[14] = unsigned_xor32($x[14], R($x[13] + $x[12], 13)); $x[15] = unsigned_xor32($x[15], R($x[14] + $x[13], 18));
+	}
+	for ($i = 0; $i < 16; ++$i)
+		$out[$i] = $x[$i] + $in[$i];
+
+	for ($i = 0; $i < 16; ++$i)
+		$out[$i] = unsigned_byteswap32($out[$i]);
+
+	return $out;
+}
+
 /*
    Algorithm scryptBlockMix
 
@@ -312,17 +356,26 @@ function scryptBlockXor($a, $b)
 	return $temp;
 }
 
-function scryptBlockMix(&$out = array(), $in = array(), $r)//in array of arrays of uint values?
+//function scryptBlockMix(&$out = array(), $in = array(), $r)//in array of arrays of uint values? Change to single parameter for input
+function scryptBlockMix($in, $r)//in array of arrays of uint values? Change to single parameter for input
 {
-	$Y = array();
 
+	if (!is_array($in))
+		return false;
+	if ($r < 1)
+		return false;
+
+	//Should this be done here??
+	$in = array_chunk($in, count($in) / 2);
+
+	$out = array();
+	$Y = array();
 	$X = $in[2 * $r - 1];
 
 	for ($i = 0; $i <= 2 * $r - 1; $i++)// < or <= ??
 	{
-//          $T = $X ^ $B[$i];//xor blocks together
 		$T = scryptBlockXor($X, $in[$i]);
-		salsa208_word_specification($X, $T);//Should be one param and output the value? // $X =
+		$X = salsa208_word_specification($T);//Should be one param and output the value? // $X =
 		$Y[$i] = $X;
 	}
 
@@ -331,30 +384,88 @@ function scryptBlockMix(&$out = array(), $in = array(), $r)//in array of arrays 
 	for ($i = 1; $i <= 2 * $r - 1; $i++)// < or <= ??
 		$out[$i] = $Y[$i];
 
+	//Should this be done here??
+	$out = array_merge($out[0], $out[1]);
+
+	return $out;
 //	B' = (Y[0], Y[2], ..., Y[2 * r - 2],
 //	      Y[1], Y[3], ..., Y[2 * r - 1])
 }
 
 
-
-
-function scryptROMix()
+function Integerify($a)
 {
+	//where Integerify (B[0] ... B[2 * r - 1]) is defined
+	//as the result of interpreting B[2 * r - 1] as a
+	//little-endian integer.
 
+	//B[2 * r - 1] = last integer in vector?
 
+	return unsigned_byteswap32($a[count($a) - 1]);
+}
+
+function scryptROMixXor($a, $b)
+{
+	$temp = array();
+	for ($i = 0; $i < 32; $i++)
+	{
+		$temp[$i] = unsigned_xor32($a[$i], $b[$i]);
+	}
+	return $temp;
+}
+
+function scryptROMix($out = array(), $in = array(), $r, $N)
+{
+	$V = array();
+
+	$X = $in;
+
+	for ($i = 0; $i <= $N - 1; $i++)// < or <= ??
+	{
+		$V[$i] = $X;
+		$X = scryptBlockMix($X, $r);
+	}
 
 /*
-   Algorithm scryptROMix
+	$test = array_chunk($in, 16);
 
+	for ($i = 0; $i <= $N - 1; $i++)// < or <= ??
+	{
+		$V[$i] = $X;
+		scryptBlockMix($out, $test, $r+1);//$X =
+		$X = array_merge($out[0], $out[1]);
+	}
+*/
+
+	for ($i = 0; $i <= $N - 1; $i++)// < or <= ??
+	{
+//		$j = unsigned_mod32(Integerify($X), $N);//Do we need an unsigned modulus operator?
+		$j = Integerify($X) % $N;//Do we need an unsigned modulus operator?
+
+		$k = $j;
+		if ($j < 0)
+			$k = $N + $j;
+
+//		dbg(Integerify($X)."%".$N."=".$j.":(should be ".$k.")");
+
+		$j = $k;
+
+		$T = scryptROMixXor($X, $V[$j]);
+		$X = scryptBlockMix($T, $r);
+	}
+
+	dbg($X);
+
+	$out = $X;
+/*
+   Algorithm scryptROMix
    Input:
             r       Block size parameter.
             B       Input octet vector of length 128 * r octets.
             N       CPU/Memory cost parameter, must be larger than 1,
                     a power of 2 and less than 2^(128 * r / 8).
-
    Output:
             B'      Output octet vector of length 128 * r octets.
-
    Steps:
 
      1. X = B
@@ -384,7 +495,7 @@ function scryptROMix()
 
 
 // salsa208_word_specification Test ////////////////////////////////////////////
-$salsa208_word_specification_test_input = array(
+$salsa208_word_specification_test_input           = array(
 	0x7E879A21, 0x4F3EC986, 0x7CA940E6, 0x41718F26,
 	0xBAEE555B, 0x8C61C1B5, 0x0DF84611, 0x6DCD3B1D,
 	0xEE24F319, 0xDF9B3D85, 0x14121E4B, 0x5AC5AA32,
@@ -397,14 +508,13 @@ $salsa208_word_specification_test_asserted_output = array(
 	0xE424CC10, 0x2C91745C, 0x24AD673D, 0xC7618F81
 );
 
-$salsa208_word_specification_test_output = array();
-salsa208_word_specification($salsa208_word_specification_test_output, $salsa208_word_specification_test_input);
-if (!assert($salsa208_word_specification_test_output === $salsa208_word_specification_test_asserted_output, "salsa208_word_specification() test")) die();//Find a better way to test this.
+$salsa208_word_specification_test_output = salsa208_word_specification($salsa208_word_specification_test_input);
+if (!assert($salsa208_word_specification_test_output === $salsa208_word_specification_test_asserted_output, "salsa208_word_specification() test")) die();//Find a better way to test this, change die to throw?
 ////////////////////////////////////////////////////////////////////////////////
 
 // scryptBlockMix Test /////////////////////////////////////////////////////////
-$scryptBlockMix_test_rounds = 1;
-$scryptBlockMix_test_input = array(
+$scryptBlockMix_test_blocks          = 1;
+$scryptBlockMix_test_input           = array(
 	array(0xF7CE0B65, 0x3D2D72A4, 0x108CF5AB, 0xE912FFDD,
 	      0x777616DB, 0xBB27A70E, 0x8204F3AE, 0x2D0F6FAD,
 	      0x89F68F48, 0x11D1E87B, 0xCC3BD740, 0x0A9FFD29,
@@ -414,6 +524,7 @@ $scryptBlockMix_test_input = array(
 	      0x67D27C51, 0xCE4AD5FE, 0xD829C90B, 0x505A571B,
 	      0x7F4D1CAD, 0x6A523CDA, 0x770E67BC, 0xEAAF7E89)
 );
+$scryptBlockMix_test_input = array_merge($scryptBlockMix_test_input[0], $scryptBlockMix_test_input[1]);
 $scryptBlockMix_test_asserted_output = array(
 	array(0xA41F859C, 0x6608CC99, 0x3B81CACB, 0x020CEF05,
 	      0x044B2181, 0xA2FD337D, 0xFD7B1C63, 0x96682F29,
@@ -424,16 +535,16 @@ $scryptBlockMix_test_asserted_output = array(
 	      0x7D3B3D80, 0x3B60E4AB, 0x920996E5, 0x9B4D53B6,
 	      0x5D2A2258, 0x77D5EDF5, 0x842CB9F1, 0x4EEFE425)
 );
+$scryptBlockMix_test_asserted_output = array_merge($scryptBlockMix_test_asserted_output[0], $scryptBlockMix_test_asserted_output[1]);
 
-$scryptBlockMix_test_output = array();
-scryptBlockMix($scryptBlockMix_test_output, $scryptBlockMix_test_input, $scryptBlockMix_test_rounds);
-if (!assert($scryptBlockMix_test_output === $scryptBlockMix_test_asserted_output, "scryptBlockMix() test")) die();//Find a better way to test this.
+$scryptBlockMix_test_output = scryptBlockMix($scryptBlockMix_test_input, $scryptBlockMix_test_blocks);
+if (!assert($scryptBlockMix_test_output === $scryptBlockMix_test_asserted_output, "scryptBlockMix() test")) die();//Find a better way to test this, change die to throw?
 ////////////////////////////////////////////////////////////////////////////////
 
 // scryptROMix Test /////////////////////////////////////////////////////////
-$scryptROMix_test_block_size = 1;
-$scryptROMix_test_cost = 16;
-$scryptROMix_test_input = array(
+$scryptROMix_test_block_size      = 1;
+$scryptROMix_test_cost            = 16;
+$scryptROMix_test_input           = array(
 	0xF7CE0B65, 0x3D2D72A4, 0x108CF5AB, 0xE912FFDD,
 	0x777616DB, 0xBB27A70E, 0x8204F3AE, 0x2D0F6FAD,
 	0x89F68F48, 0x11D1E87B, 0xCC3BD740, 0x0A9FFD29,
@@ -455,8 +566,8 @@ $scryptROMix_test_asserted_output = array(
 );
 
 $scryptROMix_test_output = array();
-scryptROMix();
-if (!assert($scryptROMix_test_output === $scryptROMix_test_asserted_output, "scryptROMix() test")) die();//Find a better way to test this.
+scryptROMix($scryptROMix_test_output, $scryptROMix_test_input, $scryptROMix_test_block_size, $scryptROMix_test_cost);
+if (!assert($scryptROMix_test_output === $scryptROMix_test_asserted_output, "scryptROMix() test")) die();//Find a better way to test this, change die to throw?
 ////////////////////////////////////////////////////////////////////////////////
 
 
